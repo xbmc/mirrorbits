@@ -4,6 +4,7 @@
 package http
 
 import (
+	. "github.com/xbmc/mirrorbits/config"
 	"net/http"
 	"net/url"
 	"strings"
@@ -20,6 +21,7 @@ const (
 	MIRRORLIST
 	FILESTATS
 	MIRRORSTATS
+	DOWNLOADSTATS
 	CHECKSUM
 
 	UNDEFINED SecureOption = iota
@@ -37,6 +39,7 @@ type Context struct {
 	isMirrorList  bool
 	isMirrorStats bool
 	isFileStats   bool
+	isDlStats     bool
 	isChecksum    bool
 	isPretty      bool
 	secureOption  SecureOption
@@ -46,6 +49,13 @@ type Context struct {
 func NewContext(w http.ResponseWriter, r *http.Request, t Templates) *Context {
 	c := &Context{r: r, w: w, t: t, v: r.URL.Query()}
 
+	if len(GetConfig().DownloadStatsPath) > 0 && r.URL.Path == GetConfig().DownloadStatsPath {
+		if c.paramBool("downloadstats") {
+			c.typ = DOWNLOADSTATS
+			c.isDlStats = true
+			return c
+		}
+	}
 	if c.paramBool("mirrorlist") {
 		c.typ = MIRRORLIST
 		c.isMirrorList = true
@@ -117,6 +127,11 @@ func (c *Context) IsFileStats() bool {
 // IsMirrorStats returns true if the mirror stats has been requested
 func (c *Context) IsMirrorStats() bool {
 	return c.isMirrorStats
+}
+
+// IsDownloadStats returns true if the download stats have been requested
+func (c *Context) IsDownloadStats() bool {
+	return c.isDlStats
 }
 
 // IsChecksum returns true if a checksum has been requested

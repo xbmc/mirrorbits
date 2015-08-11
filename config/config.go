@@ -46,6 +46,7 @@ func defaultConfig() Configuration {
 		LogLevel:               "INFO",
 		TraceFileLocation:      "",
 		GeoipDatabasePath:      "/usr/share/GeoIP/",
+		DownloadStatsPath:      "",
 		ConcurrentSync:         5,
 		ScanInterval:           30,
 		CheckInterval:          1,
@@ -94,6 +95,7 @@ type Configuration struct {
 	WeightDistributionRange float32    `yaml:"WeightDistributionRange"`
 	DisableOnMissingFile    bool       `yaml:"DisableOnMissingFile"`
 	Fallbacks               []fallback `yaml:"Fallbacks"`
+	DownloadStatsPath       string     `yaml:"DownloadStatsPath"`
 
 	RedisSentinelMasterName string      `yaml:"RedisSentinelMasterName"`
 	RedisSentinels          []sentinels `yaml:"RedisSentinels"`
