@@ -246,7 +246,15 @@ func (h *HTTP) mirrorHandler(w http.ResponseWriter, r *http.Request, ctx *Contex
 		}
 	}
 
-	clientInfo := h.geoip.GetRecord(remoteIP) //TODO return a pointer?
+	// parse user agent
+	ua := NewUserAgent(r.UserAgent())
+	clientUA := UaInfo{
+		Platform: strings.Trim(ua.Platform, " "),
+		OS:       strings.Trim(ua.OS+" "+ua.OSVer, " "),
+		Browser:  strings.Trim(ua.Browser, " "),
+	}
+
+	clientInfo := h.geoip.GetInfos(remoteIP) //TODO return a pointer?
 
 	mlist, excluded, err := h.engine.Selection(ctx, h.cache, &fileInfo, clientInfo)
 
@@ -318,9 +326,9 @@ func (h *HTTP) mirrorHandler(w http.ResponseWriter, r *http.Request, ctx *Contex
 	}
 
 	if !ctx.IsMirrorlist() {
-		logs.LogDownload(resultRenderer.Type(), status, results, err)
-		if len(mlist) > 0 {
-			h.stats.CountDownload(mlist[0], fileInfo)
+		logDownload(resultRenderer.Type(), status, results, err, r.UserAgent())
+		if len(mirrors) > 0 {
+			h.stats.CountDownload(mirrors[0], fileInfo, clientUA)
 		}
 	}
 
@@ -447,10 +455,10 @@ type DownloadStatsPage struct {
 
 func (h *HTTP) downloadStatsHandler(w http.ResponseWriter, r *http.Request, ctx *Context) {
 	var results []*DownloadStats
-	var output  []byte
-	var filter  string
-	var period  string
-	var index   int64
+	var output []byte
+	var filter string
+	var period string
+	var index int64
 
 	// parse query params
 	req := strings.SplitN(ctx.QueryParam("downloadstats"), "-", 3)

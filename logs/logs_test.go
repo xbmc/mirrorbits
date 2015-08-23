@@ -85,8 +85,9 @@ func TestReloadRuntimeLogs(t *testing.T) {
 	if rlogger.f != os.Stderr {
 		t.Fatalf("The logger output is expected to be Stderr")
 	}
+
 	if logging.GetLevel("main") != logging.INFO {
-		t.Fatalf("Log level is supposed to be INFO by default")
+		t.Fatalf("Log level is supposed to be INFO by default, found: %s", logging.GetLevel("main"))
 	}
 
 	ptr := reflect.ValueOf(rlogger.f).Pointer()
@@ -241,18 +242,18 @@ func TestLogDownload(t *testing.T) {
 	dlogger.Close()
 
 	// The next line isn't supposed to crash.
-	LogDownload("", 500, nil, nil)
+	LogDownload("", 500, nil, nil, "")
 
 	setDownloadLogWriter(&buf, true)
 
 	buf.Reset()
 
 	// The next few lines arent't supposed to crash.
-	LogDownload("", 200, nil, nil)
-	LogDownload("", 302, nil, nil)
-	LogDownload("", 404, nil, nil)
-	LogDownload("", 500, nil, nil)
-	LogDownload("", 501, nil, nil)
+	LogDownload("", 200, nil, nil, "")
+	LogDownload("", 302, nil, nil, "")
+	LogDownload("", 404, nil, nil, "")
+	LogDownload("", 500, nil, nil, "")
+	LogDownload("", 501, nil, nil, "")
 
 	if c := strings.Count(buf.String(), "\n"); c != 5 {
 		t.Fatalf("Invalid number of lines, got %d, expected 5", c)
@@ -284,10 +285,11 @@ func TestLogDownload(t *testing.T) {
 		},
 		Fallback: true,
 	}
+	ua := "Mirrorbits/1.0 (golang)"
 
-	LogDownload("JSON", 200, p, nil)
+	LogDownload("JSON", 200, p, nil, ua)
 
-	expected := "JSON 200 \"/test/file.tgz\" ip:192.168.0.1 mirror:m1 fallback:true sameasn:444 distance:99.00km countries:FR,UK,DE\n"
+	expected := "JSON 200 \"/test/file.tgz\" ip:192.168.0.1 mirror:m1 fallback:true sameasn:444 distance:99.00km countries:FR,UK,DE useragent:Mirrorbits/1.0 (golang)\n"
 	if !strings.HasSuffix(buf.String(), expected) {
 		t.Fatalf("Invalid log line:\nGot:\n%#vs\nExpected:\n%#v", buf.String(), expected)
 	}
@@ -302,7 +304,7 @@ func TestLogDownload(t *testing.T) {
 		IP: "192.168.0.1",
 	}
 
-	LogDownload("JSON", 404, p, nil)
+	LogDownload("JSON", 404, p, nil, "")
 
 	expected = "JSON 404 \"/test/file.tgz\" ip:192.168.0.1\n"
 	if !strings.HasSuffix(buf.String(), expected) {
@@ -325,7 +327,7 @@ func TestLogDownload(t *testing.T) {
 		},
 	}
 
-	LogDownload("JSON", 500, p, errors.New("test error"))
+	LogDownload("JSON", 500, p, errors.New("test error"), "")
 
 	expected = "JSON 500 \"\" ip: mirror:m1 error:test error\n"
 	if !strings.HasSuffix(buf.String(), expected) {
@@ -342,7 +344,7 @@ func TestLogDownload(t *testing.T) {
 		IP: "192.168.0.1",
 	}
 
-	LogDownload("JSON", 501, p, errors.New("test error"))
+	LogDownload("JSON", 501, p, errors.New("test error"), "")
 
 	expected = "JSON 501 \"/test/file.tgz\" ip:192.168.0.1 error:test error\n"
 	if !strings.HasSuffix(buf.String(), expected) {
