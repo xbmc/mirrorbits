@@ -5,7 +5,14 @@
 package useragent
 
 import (
+	. "github.com/xbmc/mirrorbits/config"
+	"github.com/op/go-logging"
+	"regexp"
 	"strings"
+)
+
+var (
+	log = logging.MustGetLogger("main")
 )
 
 type section struct {
@@ -29,6 +36,7 @@ type UaInfo struct {
 	Platform string `redis:"platform" json:",omitempty"`
 	OS       string `redis:"os" json:",omitempty"`
 	Browser  string `redis:"browser" json:",omitempty"`
+	Special  bool
 }
 
 // Read from the given string until the given delimiter or the

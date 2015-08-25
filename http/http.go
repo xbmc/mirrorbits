@@ -26,6 +26,7 @@ import (
 	"github.com/etix/mirrorbits/mirrors"
 	"github.com/etix/mirrorbits/network"
 	"github.com/etix/mirrorbits/utils"
+	"github.com/xbmc/mirrorbits/useragent"
 	"github.com/gomodule/redigo/redis"
 	"github.com/op/go-logging"
 	"gopkg.in/tylerb/graceful.v1"
@@ -55,9 +56,10 @@ type HTTP struct {
 type Templates struct {
 	*sync.RWMutex
 
-	mirrorlist    *template.Template
-	mirrorstats   *template.Template
-	downloadstats *template.Template
+	mirrorlist     *template.Template
+	mirrorstats    *template.Template
+	downloadstats  *template.Template
+	useragentstats *template.Template
 }
 
 // HTTPServer is the constructor of the HTTP server
@@ -69,6 +71,7 @@ func HTTPServer(redis *database.Redis, cache *mirrors.Cache) *HTTP {
 	h.templates.mirrorlist = template.Must(h.LoadTemplates("mirrorlist"))
 	h.templates.mirrorstats = template.Must(h.LoadTemplates("mirrorstats"))
 	h.templates.downloadstats = template.Must(h.LoadTemplates("downloadstats"))
+	h.templates.useragentstats = template.Must(h.LoadTemplates("useragentstats"))
 	h.cache = cache
 	h.stats = NewStats(redis)
 	h.engine = DefaultEngine{}
@@ -153,6 +156,11 @@ func (h *HTTP) Reload() {
 	} else {
 		log.Error("could not reload templates 'downloadstats': %s", err.Error())
 	}
+	if t, err := h.LoadTemplates("useragentstats"); err == nil {
+		h.templates.useragentstats = t //XXX lock needed?
+	} else {
+		log.Error("could not reload templates 'useragentstats': %s", err.Error())
+	}
 	h.templates.Unlock()
 }
 
@@ -213,6 +221,8 @@ func (h *HTTP) requestDispatcher(w http.ResponseWriter, r *http.Request) {
 		h.fileStatsHandler(w, r, ctx)
 	case DOWNLOADSTATS:
 		h.downloadStatsHandler(w, r, ctx)
+	case USERAGENTSTATS:
+		h.userAgentStatsHandler(w, r, ctx)
 	case CHECKSUM:
 		h.checksumHandler(w, r, ctx)
 	}
@@ -247,14 +257,80 @@ func (h *HTTP) mirrorHandler(w http.ResponseWriter, r *http.Request, ctx *Contex
 	}
 
 	// parse user agent
-	ua := NewUserAgent(r.UserAgent())
-	clientUA := UaInfo{
-		Platform: strings.Trim(ua.Platform, " "),
-		OS:       strings.Trim(ua.OS+" "+ua.OSVer, " "),
-		Browser:  strings.Trim(ua.Browser, " "),
+	uACountSpecial := false
+	clientUA := useragent.UaInfo{}
+
+	if h.parseUA {
+		ua := useragent.NewUserAgent(r.UserAgent())
+
+		// Useragent blocked?
+		if len(h.blockedUAs) > 0 {
+			for _, b := range h.blockedUAs {
+				if strings.Trim(ua.Browser, " ") == b {
+					http.NotFound(w, r)
+					return
+				}
+			}
+		}
+
+		clientUA = useragent.UaInfo{
+			Platform: strings.Trim(ua.Platform, " "),
+			OS:       strings.Trim(ua.OS+" "+ua.OSVer, " "),
+			Browser:  strings.Trim(ua.Browser, " "),
+			Special:  uACountSpecial,
+		}
+	}
+	if h.uACountOnlyS || len(h.uACountSpecial) > 0 {
+		//for _, f := range h.uACountSpecial {
+		if strings.Contains(r.URL.Path, h.uACountSpecial) {
+			uACountSpecial = true
+			ua2 := useragent.NewUserAgent(r.UserAgent())
+			for _, b := range GetConfig().UserAgentStatsConf.BrowsersWithVersion {
+				if strings.Contains(ua2.Browser, b) {
+					clientUA = useragent.UaInfo{
+						Platform: strings.Trim(ua2.Platform, " "),
+						OS:       strings.Trim(ua2.OS+" "+ua2.OSVer, " "),
+						Browser:  strings.Trim(ua2.Browser, " "),
+						Special:  uACountSpecial,
+					}
+
+					// check if our special file has a newer version
+					rconn := h.redis.Get()
+					defer rconn.Close()
+
+					sp, err := redis.String(rconn.Do("GET", "special_file_path"))
+					if err != nil {
+						log.Debug("error in redis: %s", err)
+					}
+					if sp < r.URL.Path {
+						newfile := fmt.Sprintf("special_file_path_%s", time.Now().Format("2006_01_02"))
+						rconn.Send("MULTI")
+						rconn.Send("RENAME", "special_file_path", newfile)
+						rconn.Send("SET", "special_file_path", r.URL.Path)
+
+						for _, key := range []string{"platform", "os", "browser"} {
+							mkey := fmt.Sprintf("STATS_SPECIAL_%s_%s", key, time.Now().Format("2006_01_02"))
+							for i := 0; i < 2; i++ {
+								rconn.Send("DEL", mkey)
+								mkey = mkey[:strings.LastIndex(mkey, "_")]
+							}
+						}
+						_, err := rconn.Do("EXEC")
+						if err != nil {
+							log.Debug("error in redis: %s", err)
+						} else {
+							log.Info("CountSpecialPath changed to %s", r.URL.Path)
+						}
+					} else if sp > r.URL.Path {
+						clientUA = useragent.UaInfo{}
+					}
+					break
+				}
+			}
+		}
 	}
 
-	clientInfo := h.geoip.GetInfos(remoteIP) //TODO return a pointer?
+	clientInfo := h.geoip.GetRecord(remoteIP) //TODO return a pointer?
 
 	mlist, excluded, err := h.engine.Selection(ctx, h.cache, &fileInfo, clientInfo)
 
@@ -326,9 +402,9 @@ func (h *HTTP) mirrorHandler(w http.ResponseWriter, r *http.Request, ctx *Contex
 	}
 
 	if !ctx.IsMirrorlist() {
-		logDownload(resultRenderer.Type(), status, results, err, r.UserAgent())
-		if len(mirrors) > 0 {
-			h.stats.CountDownload(mirrors[0], fileInfo, clientUA)
+		logs.LogDownload(resultRenderer.Type(), status, results, err, r.UserAgent())
+		if len(mlist) > 0 {
+			h.stats.CountDownload(mlist[0], fileInfo, clientUA)
 		}
 	}
 
@@ -498,7 +574,7 @@ func (h *HTTP) downloadStatsHandler(w http.ResponseWriter, r *http.Request, ctx 
 	}
 
 	t0 := time.Now()
-	rconn := h.redis.pool.Get()
+	rconn := h.redis.Get()
 	defer rconn.Close()
 
 	// get stats array from redis
@@ -537,7 +613,7 @@ func (h *HTTP) downloadStatsHandler(w http.ResponseWriter, r *http.Request, ctx 
 	}
 
 	// sort the array in reverse order
-	Int64Slice.Reverse(dls)
+	utils.Int64Slice.Reverse(dls)
 	log.Debug("Stats generation took %v", time.Now().Sub(t0))
 
 	// construct final results
@@ -580,6 +656,128 @@ func (h *HTTP) downloadStatsHandler(w http.ResponseWriter, r *http.Request, ctx 
 		w.Write(output)
 	}
 	log.Debug("downloadStatsHandler: output took %v", time.Now().Sub(t4))
+
+}
+
+type UserAgentStats struct {
+	Name      string
+	Downloads int64
+}
+
+type UserAgentStatsPage struct {
+	List   []*UserAgentStats
+	Type   string
+	Period string
+	Limit  int
+	Month  string
+	Today  string
+	Path   string
+	LocalJSPath string
+}
+
+func (h *HTTP) userAgentStatsHandler(w http.ResponseWriter, r *http.Request, ctx *Context) {
+	var results []*UserAgentStats
+	var output []byte
+	var filter string
+	var period string
+
+	// parse query params
+	req := strings.SplitN(ctx.QueryParam("useragentstats"), "-", 3)
+	if req[0] != "" {
+		for _, e := range req {
+			if _, err := strconv.ParseInt(e, 10, 0); err != nil {
+				http.Error(w, "Invalid period", http.StatusBadRequest)
+				return
+			}
+		}
+		period = strings.Replace(ctx.QueryParam("useragentstats"), "-", "_", 3)
+	}
+
+	item := "os"
+	if len(ctx.QueryParam("type")) >= 1 {
+		item = ctx.QueryParam("type")
+	}
+
+	format := "text"
+	if ctx.QueryParam("format") == "json" {
+		format = "json"
+	}
+
+	haveFilter := false
+	if len(ctx.QueryParam("filter")) >= 1 {
+		haveFilter = true
+		filter = strings.Trim(ctx.QueryParam("filter"), " !#&%$*+'")
+	}
+
+	limit := 100
+	if ctx.QueryParam("limit") != "" {
+		l, err := strconv.ParseInt(ctx.QueryParam("limit"), 0, 0)
+		if err != nil || l < 0 {
+			http.Error(w, "Invalid limit", http.StatusBadRequest)
+			return
+		}
+		limit = int(l)
+	}
+
+	t0 := time.Now()
+	rconn := h.redis.Get()
+	defer rconn.Close()
+
+	// get stats array from redis
+	var dkey string
+	if len(period) >= 4 {
+		dkey = fmt.Sprintf("STATS_USERAGENT_%s_%s", item, period)
+	} else {
+		dkey = fmt.Sprintf("STATS_USERAGENT_%s", item)
+	}
+	v, err := redis.Strings(rconn.Do("ZREVRANGE", dkey, "0", limit-1, "withscores"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// generatate results
+	for i := 0; i < len(v); i = i + 2 {
+		dls, _ := strconv.ParseInt(v[i+1], 10, 64)
+		if haveFilter {
+			if strings.Contains(v[i], filter) {
+				s := &UserAgentStats{Downloads: dls, Name: v[i]}
+				results = append(results, s)
+			}
+		} else {
+			s := &UserAgentStats{Downloads: dls, Name: v[i]}
+			results = append(results, s)
+		}
+	}
+
+	log.Debug("Stats generation took %v", time.Now().Sub(t0))
+	t1 := time.Now()
+
+	// output
+	if format == "text" {
+		if len(period) < 4 {
+			period = "All time"
+		}
+		today := time.Now().Format("2006-01-02")
+		month := time.Now().Format("2006-01")
+
+		err = ctx.Templates().useragentstats.ExecuteTemplate(ctx.ResponseWriter(), "base",
+			UserAgentStatsPage{results, item, period, limit, month, today, GetConfig().DownloadStatsPath, GetConfig().LocalJSPath})
+		if err != nil {
+			log.Error("Error rendering useragentstats: %s", err.Error())
+			http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
+			return
+		}
+	} else {
+		output, err = json.MarshalIndent(results, "", "    ")
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
+			return
+		}
+		ctx.ResponseWriter().Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Write(output)
+	}
+	log.Debug("userAgentStatsHandler: output took %v", time.Now().Sub(t1))
 
 }
 
