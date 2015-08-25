@@ -44,7 +44,7 @@ type Stats struct {
 	countChan chan countItem
 	mapStats  map[string]int64
 	stop      chan bool
-	uaChan    chan UaInfo
+	uaChan    chan useragent.UaInfo
 	wg        sync.WaitGroup
 }
 
@@ -62,7 +62,7 @@ func NewStats(redis *database.Redis) *Stats {
 		countChan: make(chan countItem, 1000),
 		mapStats:  make(map[string]int64),
 		stop:      make(chan bool),
-		uaChan:    make(chan UaInfo, 1000),
+		uaChan:    make(chan useragent.UaInfo, 1000),
 	}
 	go s.processCountDownload()
 	return s
