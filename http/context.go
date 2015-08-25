@@ -21,6 +21,7 @@ const (
 	FILESTATS
 	MIRRORSTATS
 	DOWNLOADSTATS
+	USERAGENTSTATS
 	CHECKSUM
 
 	UNDEFINED SecureOption = iota
@@ -39,6 +40,7 @@ type Context struct {
 	isMirrorStats bool
 	isFileStats   bool
 	isDlStats     bool
+	isUaStats     bool
 	isChecksum    bool
 	isPretty      bool
 	secureOption  SecureOption
@@ -52,6 +54,10 @@ func NewContext(w http.ResponseWriter, r *http.Request, t Templates) *Context {
 		if c.paramBool("downloadstats") {
 			c.typ = DOWNLOADSTATS
 			c.isDlStats = true
+			return c
+		} else if c.paramBool("useragentstats") {
+			c.typ = USERAGENTSTATS
+			c.isUaStats = true
 			return c
 		}
 	}
@@ -124,8 +130,13 @@ func (c *Context) IsMirrorStats() bool {
 }
 
 // IsDownloadStats returns true if the download stats have been requested
-func (c *Context) IsDownloadStats() bool {
+func (c *Context) IsDlStats() bool {
 	return c.isDlStats
+}
+
+// IsUserAgentStats returns true if the download stats have been requested
+func (c *Context) IsUaStats() bool {
+	return c.isUaStats
 }
 
 // IsChecksum returns true if a checksum has been requested

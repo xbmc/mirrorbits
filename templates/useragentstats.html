@@ -1,0 +1,19 @@
+{{define "title"}}Downloadstats{{end}}
+{{define "headline"}}{{if .Limit}}Top {{.Limit}}{{end}} {{.Type}}s {{.Period}}{{end}}
+
+{{define "head"}}{{end}}
+
+{{define "body"}}
+Types: <a href="{{.Path}}?useragentstats&type=os">OS</a> <a href="{{.Path}}?useragentstats&type=browser">browser</a> <a href="{{.Path}}?useragentstats&type=platform">platform</a>
+<p>
+<a href="{{.Path}}?useragentstats&type={{.Type}}">All Time</a> <a href="{{.Path}}?useragentstats={{.Month}}&type={{.Type}}">This Month</a> <a href="/stats?useragentstats={{.Today}}&type={{.Type}}">Today</a>
+<p>
+<table>
+<thead><tr><th>{{.Type}}</th><th>Downloads</th></tr></thead>
+<tbody>
+{{range $v := .List}}
+<tr><td>{{$v.Name}}</td><td>{{$v.Downloads}}</td></tr>
+{{end}}
+</tbody>
+</table>
+{{end}}
