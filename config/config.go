@@ -62,7 +62,8 @@ func defaultConfig() Configuration {
 		UserAgentStatsConf: uaconf{
 			LogUnknown:          false,
 			BrowsersWithVersion: []string{},
-			CheckEngines:        []string{"Android", "Windows"},
+			CheckEngines:        []string{},
+			BlockedUserAgents:   []string{},
 		},
 	}
 }
@@ -121,6 +122,7 @@ type uaconf struct {
 	LogUnknown          bool     `yaml:"LogUnknown"`
 	BrowsersWithVersion []string `yaml:"BrowsersWithVersion"`
 	CheckEngines        []string `yaml:"CheckEngines"`
+	BlockedUserAgents   []string `yaml:"BlockedUserAgents"`
 }
 
 // LoadConfig loads the configuration file if it has not yet been loaded
