@@ -50,6 +50,7 @@ type HTTP struct {
 	Restarting     bool
 	stopped        bool
 	stoppedMutex   sync.Mutex
+	blockedUAs     []string
 }
 
 // Templates is a struct embedding instances of the precompiled templates
@@ -75,6 +76,7 @@ func HTTPServer(redis *database.Redis, cache *mirrors.Cache) *HTTP {
 	h.cache = cache
 	h.stats = NewStats(redis)
 	h.engine = DefaultEngine{}
+	h.blockedUAs = GetConfig().UserAgentStatsConf.BlockedUserAgents
 	http.Handle("/", NewGzipHandler(h.requestDispatcher))
 
 	// Load the GeoIP databases
