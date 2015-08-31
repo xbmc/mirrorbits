@@ -109,9 +109,15 @@ func (s *Stats) processCountDownload() {
 			s.mapStats["s"+date+strconv.Itoa(c.mirrorID)] += c.size
 		case c := <-s.uaChan:
 			date := time.Now().Format("2006_01_02|") // Includes separator
-			s.mapStats["p"+date+c.Platform] += 1
-			s.mapStats["o"+date+c.OS] += 1
-			s.mapStats["b"+date+c.Browser] += 1
+			if c.Special {
+				s.mapStats["P"+date+c.Platform] += 1
+				s.mapStats["O"+date+c.OS] += 1
+				s.mapStats["B"+date+c.Browser] += 1
+			} else {
+				s.mapStats["p"+date+c.Platform] += 1
+				s.mapStats["o"+date+c.OS] += 1
+				s.mapStats["b"+date+c.Browser] += 1
+			}
 		case <-pushTicker.C:
 			s.pushStats()
 		}
@@ -206,6 +212,30 @@ func (s *Stats) pushStats() {
 			// Browser
 
 			mkey := fmt.Sprintf("STATS_USERAGENT_browser_%s", date)
+			for i := 0; i < 4; i++ {
+				rconn.Send("ZINCRBY", mkey, v, object)
+				mkey = mkey[:strings.LastIndex(mkey, "_")]
+			}
+		} else if typ == "P" {
+			// Special Platform
+
+			mkey := fmt.Sprintf("STATS_SPECIAL_platform_%s", date)
+			for i := 0; i < 4; i++ {
+				rconn.Send("ZINCRBY", mkey, v, object)
+				mkey = mkey[:strings.LastIndex(mkey, "_")]
+			}
+		} else if typ == "O" {
+			// Special OS
+
+			mkey := fmt.Sprintf("STATS_SPECIAL_os_%s", date)
+			for i := 0; i < 4; i++ {
+				rconn.Send("ZINCRBY", mkey, v, object)
+				mkey = mkey[:strings.LastIndex(mkey, "_")]
+			}
+		} else if typ == "B" {
+			// Special Browser
+
+			mkey := fmt.Sprintf("STATS_SPECIAL_browser_%s", date)
 			for i := 0; i < 4; i++ {
 				rconn.Send("ZINCRBY", mkey, v, object)
 				mkey = mkey[:strings.LastIndex(mkey, "_")]
