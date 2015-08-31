@@ -51,6 +51,9 @@ type HTTP struct {
 	stopped        bool
 	stoppedMutex   sync.Mutex
 	blockedUAs     []string
+	uACountOnlyS   bool
+	uACountSpecial string
+	parseUA        bool
 }
 
 // Templates is a struct embedding instances of the precompiled templates
@@ -77,6 +80,9 @@ func HTTPServer(redis *database.Redis, cache *mirrors.Cache) *HTTP {
 	h.stats = NewStats(redis)
 	h.engine = DefaultEngine{}
 	h.blockedUAs = GetConfig().UserAgentStatsConf.BlockedUserAgents
+	h.uACountOnlyS = GetConfig().UserAgentStatsConf.CountOnlySpecialPath
+	h.uACountSpecial = GetConfig().UserAgentStatsConf.CountSpecialPath
+	h.parseUA = h.uACountOnlyS == false || len(h.blockedUAs) > 0
 	http.Handle("/", NewGzipHandler(h.requestDispatcher))
 
 	// Load the GeoIP databases
@@ -720,6 +726,11 @@ func (h *HTTP) userAgentStatsHandler(w http.ResponseWriter, r *http.Request, ctx
 		limit = int(l)
 	}
 
+	name := "USERAGENT"
+	if len(ctx.QueryParam("special")) > 0 {
+		name = "SPECIAL"
+	}
+
 	t0 := time.Now()
 	rconn := h.redis.Get()
 	defer rconn.Close()
@@ -727,9 +738,9 @@ func (h *HTTP) userAgentStatsHandler(w http.ResponseWriter, r *http.Request, ctx
 	// get stats array from redis
 	var dkey string
 	if len(period) >= 4 {
-		dkey = fmt.Sprintf("STATS_USERAGENT_%s_%s", item, period)
+		dkey = fmt.Sprintf("STATS_%s_%s_%s", name, item, period)
 	} else {
-		dkey = fmt.Sprintf("STATS_USERAGENT_%s", item)
+		dkey = fmt.Sprintf("STATS_%s_%s", name, item)
 	}
 	v, err := redis.Strings(rconn.Do("ZREVRANGE", dkey, "0", limit-1, "withscores"))
 	if err != nil {
