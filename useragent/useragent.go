@@ -317,6 +317,9 @@ func (p *UserAgent) normalizeBrowser() {
 
 	for _, b := range browsersWithVer {
 		if b == p.Browser {
+			if len(bv) >= 11 {
+				bv = bv[:10]
+			}
 			p.Browser = p.Browser + " " + bv
 			break
 		}
