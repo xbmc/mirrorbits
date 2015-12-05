@@ -147,12 +147,23 @@ func (p *UserAgent) Parse(ua string) {
 		p.OS = "Unknown"
 
 	} else {
-		p.Platform = "Unknown"
-		p.OS = "Unknown"
+		// check if we have one of the old broken XBMC user agents,
+		// .e.g. "XBMC/13.2 Git:20140604-84725b0 (Linux; Android; 3.10.33 armv7l; http://xbmc.org)"
+		r, _ := regexp.Compile("^(.*) .* \\((.*)$")
+		if r.MatchString(p.UA) {
+			newUA := r.ReplaceAllString(p.UA, "$1 ($2")
+			log.Debug("detected broken UserAgent, trying to sanitize - new UA: %s", newUA)
+			p.Parse(newUA)
+			return
+		} else {
+			p.Platform = "Unknown"
+			p.OS = "Unknown"
 
-		if GetConfig().UserAgentStatsConf.LogUnknown {
-			log.Debug("Unknown or incomplete UserAgent: %s", p.UA)
+			if GetConfig().UserAgentStatsConf.LogUnknown {
+				log.Error("Unknown or incomplete UserAgent: %s", p.UA)
+			}
 		}
+
 		return
 	}
 
