@@ -22,9 +22,18 @@ import (
 )
 
 var (
-	log     = logging.MustGetLogger("main")
-	rlogger runtimeLogger
-	dlogger downloadsLogger
+	log          = logging.MustGetLogger("main")
+	rlogger      RuntimeLogger
+	dlogger      DownloadsLogger
+	loglevel     logging.Level
+	nameToLevels = map[string]logging.Level{
+		"CRITICAL": logging.CRITICAL,
+		"ERROR":    logging.ERROR,
+		"WARNING":  logging.WARNING,
+		"NOTICE":   logging.NOTICE,
+		"INFO":     logging.INFO,
+		"DEBUG":    logging.DEBUG,
+	}
 )
 
 type runtimeLogger struct {
@@ -93,8 +102,13 @@ func ReloadRuntimeLogs() {
 		logging.SetFormatter(logging.MustStringFormatter("%{shortfile:-20s}%{time:2006/01/02 15:04:05.000 MST} %{message}"))
 		logging.SetLevel(logging.DEBUG, "main")
 	} else {
+		loglevel = logging.INFO
+		if SafeGetConfig() != nil {
+			loglevel = nameToLevels[GetConfig().LogLevel]
+		}
 		logging.SetFormatter(logging.MustStringFormatter("%{time:2006/01/02 15:04:05.000 MST} %{message}"))
-		logging.SetLevel(logging.INFO, "main")
+		logging.SetLevel(loglevel, "main")
+		log.Critical("LogLevel set to: %s", logging.GetLevel("main"))
 	}
 }
 
