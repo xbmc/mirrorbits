@@ -41,6 +41,7 @@ func defaultConfig() Configuration {
 		RedisPassword:          "",
 		RedisDB:                0,
 		LogDir:                 "",
+		LogLevel:               "INFO",
 		TraceFileLocation:      "",
 		GeoipDatabasePath:      "/usr/share/GeoIP/",
 		ConcurrentSync:         5,
@@ -74,6 +75,7 @@ type Configuration struct {
 	RedisPassword           string     `yaml:"RedisPassword"`
 	RedisDB                 int        `yaml:"RedisDB"`
 	LogDir                  string     `yaml:"LogDir"`
+	LogLevel                string     `yaml:"LogLevel"`
 	TraceFileLocation       string     `yaml:"TraceFileLocation"`
 	GeoipDatabasePath       string     `yaml:"GeoipDatabasePath"`
 	ConcurrentSync          int        `yaml:"ConcurrentSync"`
@@ -202,6 +204,13 @@ func GetConfig() *Configuration {
 // SetConfiguration is only used for testing purpose
 func SetConfiguration(c *Configuration) {
 	config = c
+}
+
+func SafeGetConfig() *Configuration {
+	defer func() {
+		if err := recover(); err != nil {}
+	}()
+	return GetConfig()
 }
 
 // SubscribeConfig allows subscribers to get notified when
