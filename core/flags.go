@@ -24,7 +24,7 @@ func init() {
 	flag.BoolVar(&Monitor, "monitor", true, "Enable the background mirrors monitor")
 	flag.StringVar(&CpuProfile, "cpuprofile", "", "write cpu profile to file")
 	flag.StringVar(&PidFile, "p", "", "Path to pid file")
-	flag.StringVar(&RunLog, "log", "", "File to output logs (default: stderr)")
+	flag.StringVar(&RunLog, "log", "", "override ErrorLog(default: see mirrorbits.conf)")
 	flag.Parse()
 }
 
