@@ -39,7 +39,7 @@ func init() {
 	daemon.StringVar(&ConfigFile, "config", "", "Path to the config file")
 	daemon.BoolVar(&Monitor, "monitor", true, "Enable the background mirrors monitor")
 	daemon.StringVar(&PidFile, "p", "", "Path to pid file")
-	daemon.StringVar(&RunLog, "log", "", "File to output logs (default: stderr)")
+	daemon.StringVar(&RunLog, "log", "", "override ErrorLog(default: see mirrorbits.conf)")
 
 	if len(os.Args) > 1 && os.Args[1] == "daemon" {
 		Daemon = true

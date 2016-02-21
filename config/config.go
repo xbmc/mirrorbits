@@ -40,7 +40,8 @@ func defaultConfig() Configuration {
 		RedisAddress:           "127.0.0.1:6379",
 		RedisPassword:          "",
 		RedisDB:                0,
-		LogDir:                 "",
+		AccessLog:              "access.log",
+		ErrorLog:               "", // stderr
 		LogLevel:               "INFO",
 		TraceFileLocation:      "",
 		GeoipDatabasePath:      "/usr/share/GeoIP/",
@@ -82,7 +83,8 @@ type Configuration struct {
 	RedisAddress            string     `yaml:"RedisAddress"`
 	RedisPassword           string     `yaml:"RedisPassword"`
 	RedisDB                 int        `yaml:"RedisDB"`
-	LogDir                  string     `yaml:"LogDir"`
+	AccessLog               string     `yaml:"AccessLog"`
+	ErrorLog                string     `yaml:"ErrorLog"`
 	LogLevel                string     `yaml:"LogLevel"`
 	TraceFileLocation       string     `yaml:"TraceFileLocation"`
 	GeoipDatabasePath       string     `yaml:"GeoipDatabasePath"`
