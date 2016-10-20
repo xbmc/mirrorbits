@@ -239,8 +239,8 @@ func (p *UserAgent) Parse(ua string) {
 			p.OSVer = p.EngineVer
 			break
 		}
-		if strings.Contains(p.OS, "OpenELEC") || strings.Contains(p.OS, "Raspbian") {
-			// Openelec and Raspbian are linux platforms
+		if strings.Contains(p.OS, "OpenELEC") || strings.Contains(p.OS, "LibreELEC") || strings.Contains(p.OS, "Raspbian") {
+			// Openelec, LibreELEC and Raspbian are linux platforms
 			p.Platform = "Linux"
 			return
 		}
