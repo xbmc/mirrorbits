@@ -12,10 +12,10 @@ import (
 	"sync"
 	"time"
 
-	. "github.com/etix/mirrorbits/config"
-	"github.com/etix/mirrorbits/database"
-	"github.com/etix/mirrorbits/mirrors"
-	"github.com/etix/mirrorbits/utils"
+	. "github.com/xbmc/mirrorbits/config"
+	"github.com/xbmc/mirrorbits/database"
+	"github.com/xbmc/mirrorbits/mirrors"
+	"github.com/xbmc/mirrorbits/utils"
 )
 
 const (

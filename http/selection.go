@@ -9,11 +9,11 @@ import (
 	"sort"
 	"strings"
 
-	. "github.com/etix/mirrorbits/config"
-	"github.com/etix/mirrorbits/filesystem"
-	"github.com/etix/mirrorbits/mirrors"
-	"github.com/etix/mirrorbits/network"
-	"github.com/etix/mirrorbits/utils"
+	. "github.com/xbmc/mirrorbits/config"
+	"github.com/xbmc/mirrorbits/filesystem"
+	"github.com/xbmc/mirrorbits/mirrors"
+	"github.com/xbmc/mirrorbits/network"
+	"github.com/xbmc/mirrorbits/utils"
 )
 
 type mirrorSelection interface {
