@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/etix/mirrorbits/database"
+	"github.com/xbmc/mirrorbits/database"
 	"github.com/garyburd/redigo/redis"
 )
 

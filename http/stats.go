@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/etix/mirrorbits/database"
-	"github.com/etix/mirrorbits/filesystem"
-	"github.com/etix/mirrorbits/mirrors"
-	"github.com/wsnipex/mirrorbits/useragent"
+	"github.com/xbmc/mirrorbits/database"
+	"github.com/xbmc/mirrorbits/filesystem"
+	"github.com/xbmc/mirrorbits/mirrors"
+	"github.com/xbmc/mirrorbits/useragent"
 )
 
 /*

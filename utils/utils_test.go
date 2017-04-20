@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/etix/geoip"
-	"github.com/etix/mirrorbits/core"
-	"github.com/etix/mirrorbits/network"
+	"github.com/xbmc/mirrorbits/core"
+	"github.com/xbmc/mirrorbits/network"
 )
 
 func TestNormalizeURL(t *testing.T) {

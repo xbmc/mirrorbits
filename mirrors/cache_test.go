@@ -12,9 +12,9 @@ import (
 	"unsafe"
 
 	"github.com/etix/geoip"
-	"github.com/etix/mirrorbits/filesystem"
-	"github.com/etix/mirrorbits/network"
-	. "github.com/etix/mirrorbits/testing"
+	"github.com/xbmc/mirrorbits/filesystem"
+	"github.com/xbmc/mirrorbits/network"
+	. "github.com/xbmc/mirrorbits/testing"
 	"github.com/garyburd/redigo/redis"
 	_ "github.com/rafaeljusto/redigomock"
 )

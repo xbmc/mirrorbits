@@ -6,7 +6,7 @@ BRANCH := $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 BUILD := $(SHA)-$(BRANCH)
 TARBALL := dist/mirrorbits-$(VERSION).tar.gz
 
-PACKAGE = github.com/etix/mirrorbits
+PACKAGE = github.com/xbmc/mirrorbits
 
 GOFLAGS := -ldflags "-X $(PACKAGE)/core.VERSION=$(VERSION) -X $(PACKAGE)/core.BUILD=$(BUILD)"
 GOFLAGSDEV := -race -ldflags "-X $(PACKAGE)/core.VERSION=$(VERSION) -X $(PACKAGE)/core.BUILD=$(BUILD) -X $(PACKAGE)/core.DEV=-dev"
