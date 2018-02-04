@@ -38,6 +38,7 @@ var (
 		CheckInterval:          1,
 		RepositoryScanInterval: 5,
 		MaxLinkHeaders:         10,
+		CheckSumHeaders:        true,
 		Hashes: hashing{
 			SHA1:   true,
 			SHA256: false,
@@ -83,6 +84,7 @@ type Configuration struct {
 	CheckInterval           int        `yaml:"CheckInterval"`
 	RepositoryScanInterval  int        `yaml:"RepositoryScanInterval"`
 	MaxLinkHeaders          int        `yaml:"MaxLinkHeaders"`
+	CheckSumHeaders         bool       `yaml:"CheckSumHeaders"`
 	Hashes                  hashing    `yaml:"Hashes"`
 	DisallowRedirects       bool       `yaml:"DisallowRedirects"`
 	WeightDistributionRange float32    `yaml:"WeightDistributionRange"`
