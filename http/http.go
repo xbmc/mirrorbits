@@ -413,7 +413,7 @@ func (h *HTTP) mirrorHandler(w http.ResponseWriter, r *http.Request, ctx *Contex
 	if !ctx.IsMirrorlist() {
 		logs.LogDownload(resultRenderer.Type(), status, results, err, r.UserAgent())
 		if len(mlist) > 0 {
-			h.stats.CountDownload(mlist[0], fileInfo, clientUA)
+			h.stats.CountDownload(clientInfo.CountryCode, mlist[0], fileInfo, clientUA)
 		}
 	}
 

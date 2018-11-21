@@ -17,7 +17,7 @@ import (
 )
 
 /*
-	Total (all files, all mirrors):
+	Total (all files, all mirrors, all countries):
 	STATS_TOTAL
 
 	List of hashes for a file:
@@ -36,6 +36,17 @@ import (
 	STATS_MIRROR_BYTES_[year]               = mirror -> value  By year
 	STATS_MIRROR_BYTES_[year]_[month]       = mirror -> value  By month
 	STATS_MIRROR_BYTES_[year]_[month]_[day] = mirror -> value  By day
+
+	List of hashes for a country:
+	STATS_COUNTRY                      = country -> value  All time
+	STATS_COUNTRY_[year]               = country -> value  By year
+	STATS_COUNTRY_[year]_[month]       = country -> value  By month
+	STATS_COUNTRY_[year]_[month]_[day] = country -> value  By day
+
+	STATS_COUNTRY_BYTES                      = country -> value  All time
+	STATS_COUNTRY_BYTES_[year]               = country -> value  By year
+	STATS_COUNTRY_BYTES_[year]_[month]       = country -> value  By month
+	STATS_COUNTRY_BYTES_[year]_[month]_[day] = country -> value  By day
 */
 
 var (
@@ -54,6 +65,7 @@ type Stats struct {
 }
 
 type countItem struct {
+	country  string
 	mirrorID string
 	filepath string
 	size     int64
@@ -81,7 +93,7 @@ func (s *Stats) Terminate() {
 }
 
 // CountDownload is a lightweight method used to count a new download for a specific file and mirror
-func (s *Stats) CountDownload(m mirrors.Mirror, fileinfo filesystem.FileInfo, uaInfo useragent.UaInfo) error {
+func (s *Stats) CountDownload(countryCode string, m mirrors.Mirror, fileinfo filesystem.FileInfo, uaInfo useragent.UaInfo) error {
 	if m.ID == "" {
 		return errUnknownMirror
 	}
@@ -89,7 +101,7 @@ func (s *Stats) CountDownload(m mirrors.Mirror, fileinfo filesystem.FileInfo, ua
 		return errEmptyFileError
 	}
 
-	s.countChan <- countItem{m.ID, fileinfo.Path, fileinfo.Size, time.Now().UTC()}
+	s.countChan <- countItem{countryCode, m.ID, fileinfo.Path, fileinfo.Size, time.Now().UTC()}
 	s.uaChan <- uaInfo
 	return nil
 }
@@ -107,9 +119,11 @@ func (s *Stats) processCountDownload() {
 			return
 		case c := <-s.countChan:
 			date := c.time.Format("2006_01_02|") // Includes separator
+			s.mapStats["c"+date+c.country]++
 			s.mapStats["f"+date+c.filepath]++
 			s.mapStats["m"+date+c.mirrorID]++
 			s.mapStats["s"+date+c.mirrorID] += c.size
+			s.mapStats["z"+date+c.country] += c.size
 		case c := <-s.uaChan:
 			date := time.Now().Format("2006_01_02|") // Includes separator
 			if c.Special {
@@ -155,7 +169,16 @@ func (s *Stats) pushStats() {
 			continue
 		}
 
-		if typ == "f" {
+		if typ == "c" {
+			// Country
+
+			ckey := fmt.Sprintf("STATS_COUNTRY_%s", date)
+
+			for i := 0; i < 4; i++ {
+				rconn.Send("HINCRBY", ckey, object, v)
+				ckey = ckey[:strings.LastIndex(ckey, "_")]
+			}
+		} else if typ == "f" {
 			// File
 
 			fkey := fmt.Sprintf("STATS_FILE_%s", date)
@@ -232,6 +255,15 @@ func (s *Stats) pushStats() {
 			for i := 0; i < 4; i++ {
 				rconn.Send("ZINCRBY", mkey, v, object)
 				mkey = mkey[:strings.LastIndex(mkey, "_")]
+			}
+		} else if typ == "z" {
+			// Bytes per country
+
+			ckey := fmt.Sprintf("STATS_COUNTRY_BYTES_%s", date)
+
+			for i := 0; i < 4; i++ {
+				rconn.Send("HINCRBY", ckey, object, v)
+				ckey = ckey[:strings.LastIndex(ckey, "_")]
 			}
 		} else {
 			log.Warning("Stats: unknown type", typ)
