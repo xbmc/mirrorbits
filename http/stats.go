@@ -31,6 +31,11 @@ import (
 	STATS_MIRROR_[year]					= mirror -> value	By year
 	STATS_MIRROR_[year]_[month]			= mirror -> value	By month
 	STATS_MIRROR_[year]_[month]_[day]	= mirror -> value	By day
+
+	STATS_MIRROR_BYTES                      = mirror -> value  All time
+	STATS_MIRROR_BYTES_[year]               = mirror -> value  By year
+	STATS_MIRROR_BYTES_[year]_[month]       = mirror -> value  By month
+	STATS_MIRROR_BYTES_[year]_[month]_[day] = mirror -> value  By day
 */
 
 var (
@@ -172,7 +177,7 @@ func (s *Stats) pushStats() {
 				mkey = mkey[:strings.LastIndex(mkey, "_")]
 			}
 		} else if typ == "s" {
-			// Bytes
+			// Bytes per mirror
 
 			mkey := fmt.Sprintf("STATS_MIRROR_BYTES_%s", date)
 
