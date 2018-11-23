@@ -12,7 +12,7 @@ ifneq (${DESTDIR}$(PREFIX),)
 TEMPLATES = ${DESTDIR}$(PREFIX)/share/mirrorbits
 endif
 PREFIX ?= /usr/local
-PACKAGE = github.com/etix/mirrorbits
+PACKAGE = github.com/xbmc/mirrorbits
 
 LDFLAGS := -X $(PACKAGE)/core.VERSION=$(VERSION) -X $(PACKAGE)/core.BUILD=$(BUILD) -X $(PACKAGE)/config.TEMPLATES_PATH=${TEMPLATES}
 GOFLAGS := -ldflags "$(LDFLAGS)"

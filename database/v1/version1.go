@@ -3,8 +3,8 @@ package v1
 import (
 	"fmt"
 
-	"github.com/etix/mirrorbits/core"
-	"github.com/etix/mirrorbits/database/interfaces"
+	"github.com/xbmc/mirrorbits/core"
+	"github.com/xbmc/mirrorbits/database/interfaces"
 	"github.com/gomodule/redigo/redis"
 	"github.com/pkg/errors"
 )

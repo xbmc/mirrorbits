@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/etix/mirrorbits/core"
-	"github.com/etix/mirrorbits/rpc"
+	"github.com/xbmc/mirrorbits/core"
+	"github.com/xbmc/mirrorbits/rpc"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

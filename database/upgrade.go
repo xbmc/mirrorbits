@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/etix/mirrorbits/core"
-	"github.com/etix/mirrorbits/database/upgrader"
+	"github.com/xbmc/mirrorbits/core"
+	"github.com/xbmc/mirrorbits/database/upgrader"
 	"github.com/gomodule/redigo/redis"
 )
 

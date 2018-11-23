@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	. "github.com/etix/mirrorbits/config"
-	"github.com/etix/mirrorbits/core"
-	"github.com/etix/mirrorbits/mirrors"
+	. "github.com/xbmc/mirrorbits/config"
+	"github.com/xbmc/mirrorbits/core"
+	"github.com/xbmc/mirrorbits/mirrors"
 	"github.com/op/go-logging"
 )
 
