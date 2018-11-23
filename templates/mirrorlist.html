@@ -21,12 +21,8 @@
 {{end}}
     <script type="text/javascript">
         $(function() {
-            {{$filledchart := false}}
             var mirrordistchartdata = [
-                {{range $i, $v := .MirrorList -}}
-                    {{if $v.Weight}}{{$filledchart = "yes"}}{ label: '{{$v.Name}}', data: {{$v.Weight}}},{{end}}
-                {{- end -}}
-                {{if not $filledchart}}{ label: 'Random', data: 100 },{{end}}
+                {{range $i, $v := .MirrorList}}{{if $v.Weight}}{ label: '{{$v.Name}}', data: {{$v.Weight}}},{{end}}{{end}}
             ];
             $.plot('#chart_div', mirrordistchartdata, {
                 series: {
