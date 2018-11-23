@@ -521,6 +521,7 @@ func (h *HTTP) fileStatsHandler(w http.ResponseWriter, r *http.Request, ctx *Con
 		output, err = json.MarshalIndent(s, "", "    ")
 	}
 
+	ctx.ResponseWriter().Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Write(output)
 }
 
