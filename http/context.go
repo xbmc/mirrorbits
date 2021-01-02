@@ -6,6 +6,7 @@ package http
 import (
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // RequestType defines the type of the request
@@ -66,6 +67,13 @@ func NewContext(w http.ResponseWriter, r *http.Request, t Templates) *Context {
 	}
 
 	// Check for HTTPS requirements
+	proto := r.Header.Get("X-Forwarded-Proto")
+	if strings.ToLower(proto) == "https" {
+		c.secureOption = WITHTLS
+	} else {
+		c.secureOption = WITHOUTTLS
+	}
+
 	v, ok := c.v["https"]
 	if ok {
 		if v[0] == "1" {
