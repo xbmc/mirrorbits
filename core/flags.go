@@ -30,6 +30,7 @@ func Parseflags() {
 	flag.StringVar(&RPCHost, "h", "localhost", "Server host")
 	flag.StringVar(&RPCPassword, "P", "", "Server password")
 	flag.BoolVar(&RPCAskPass, "a", false, "Ask for server password")
+	flag.StringVar(&RunLog, "log", "", "override ErrorLog(default: see mirrorbits.conf)")
 	flag.Parse()
 	NArg = flag.NArg()
 

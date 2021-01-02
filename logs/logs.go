@@ -9,6 +9,7 @@ import (
 	"io"
 	stdlog "log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -73,18 +74,27 @@ func isTerminal(f *os.File) bool {
 // ReloadRuntimeLogs reopens the runtime logs for writing
 func ReloadRuntimeLogs() {
 	if rlogger.f == os.Stderr && core.RunLog == "" {
-		// Logger already set up and connected to the console.
-		// Don't reload to avoid breaking journald.
-		return
+		if SafeGetConfig() == nil || GetConfig().ErrorLog == "" {
+			// Logger already set up and connected to the console.
+			// Don't reload to avoid breaking journald.
+			return
+		}
 	}
 
 	if rlogger.f != nil && rlogger.f != os.Stderr {
 		rlogger.f.Close()
 	}
 
+	runlog := ""
 	if core.RunLog != "" {
+		runlog = core.RunLog
+	} else if SafeGetConfig() != nil {
+		runlog = GetConfig().ErrorLog
+	}
+
+	if runlog != "" {
 		var err error
-		rlogger.f, _, err = openLogFile(core.RunLog)
+		rlogger.f, _, err = openLogFile(filepath.Join(GetConfig().LogDir, runlog))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Cannot open log file for writing")
 			rlogger.f = os.Stderr
@@ -148,12 +158,12 @@ func ReloadDownloadLogs() {
 
 	dlogger.Close()
 
-	if GetConfig().LogDir == "" {
+	if GetConfig().AccessLog == "" {
 		return
 	}
 
-	logfile := GetConfig().LogDir + "/downloads.log"
-	f, createHeader, err := openLogFile(logfile)
+	logfile := GetConfig().AccessLog
+	f, createHeader, err := openLogFile(filepath.Join(GetConfig().LogDir, logfile))
 	if err != nil {
 		log.Criticalf("Cannot open log file %s", logfile)
 		return
