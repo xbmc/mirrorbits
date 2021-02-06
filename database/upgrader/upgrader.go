@@ -4,8 +4,8 @@
 package upgrader
 
 import (
-	"github.com/etix/mirrorbits/database/interfaces"
-	v1 "github.com/etix/mirrorbits/database/v1"
+	"github.com/xbmc/mirrorbits/database/interfaces"
+	v1 "github.com/xbmc/mirrorbits/database/v1"
 )
 
 // Upgrader is an interface to implement a database upgrade strategy

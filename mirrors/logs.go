@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/etix/mirrorbits/core"
-	"github.com/etix/mirrorbits/database"
+	"github.com/xbmc/mirrorbits/core"
+	"github.com/xbmc/mirrorbits/database"
 	"github.com/gomodule/redigo/redis"
 	"github.com/op/go-logging"
 )

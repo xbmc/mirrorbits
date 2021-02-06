@@ -19,14 +19,14 @@ import (
 	"time"
 
 	systemd "github.com/coreos/go-systemd/daemon"
-	. "github.com/etix/mirrorbits/config"
-	"github.com/etix/mirrorbits/core"
-	"github.com/etix/mirrorbits/database"
-	"github.com/etix/mirrorbits/filesystem"
-	"github.com/etix/mirrorbits/logs"
-	"github.com/etix/mirrorbits/mirrors"
-	"github.com/etix/mirrorbits/network"
-	"github.com/etix/mirrorbits/utils"
+	. "github.com/xbmc/mirrorbits/config"
+	"github.com/xbmc/mirrorbits/core"
+	"github.com/xbmc/mirrorbits/database"
+	"github.com/xbmc/mirrorbits/filesystem"
+	"github.com/xbmc/mirrorbits/logs"
+	"github.com/xbmc/mirrorbits/mirrors"
+	"github.com/xbmc/mirrorbits/network"
+	"github.com/xbmc/mirrorbits/utils"
 	"github.com/gomodule/redigo/redis"
 	"github.com/op/go-logging"
 	"gopkg.in/tylerb/graceful.v1"
@@ -500,7 +500,7 @@ func (h *HTTP) downloadStatsHandler(w http.ResponseWriter, r *http.Request, ctx 
 	}
 
 	t0 := time.Now()
-	rconn := h.redis.pool.Get()
+	rconn := h.redis.Get()
 	defer rconn.Close()
 
 	// get stats array from redis
@@ -539,7 +539,7 @@ func (h *HTTP) downloadStatsHandler(w http.ResponseWriter, r *http.Request, ctx 
 	}
 
 	// sort the array in reverse order
-	Int64Slice.Reverse(dls)
+	utils.Int64Slice.Reverse(dls)
 	log.Debug("Stats generation took %v", time.Now().Sub(t0))
 
 	// construct final results

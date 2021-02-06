@@ -1,4 +1,4 @@
-module github.com/etix/mirrorbits
+module github.com/xbmc/mirrorbits
 
 require (
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f

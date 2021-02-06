@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	. "github.com/etix/mirrorbits/config"
+	. "github.com/xbmc/mirrorbits/config"
 	"github.com/op/go-logging"
 	"github.com/oschwald/maxminddb-golang"
 )

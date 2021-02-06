@@ -4,7 +4,7 @@
 package rpc
 
 import (
-	"github.com/etix/mirrorbits/mirrors"
+	"github.com/xbmc/mirrorbits/mirrors"
 	"github.com/golang/protobuf/ptypes"
 )
 
